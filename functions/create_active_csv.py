@@ -54,21 +54,18 @@ The CSV file created by `csvCreator.py` follows a specific structure, where each
 - ledb: Giá trị thành phần màu xanh dương của đèn LED trên drone.
 
 Flight Modes and Codes:
-- 0: On the ground
-- 10: Initial climbing state
-- 20: Initial holding after climb
-- 30: Moving to start point
-- 40: Holding at start point
-- 50: Moving to maneuvering start point
-- 60: Holding at maneuver start point
-- 70: Maneuvering (trajectory)
-- 80: Holding at the end of the trajectory coordinate
-- 90: Returning to home coordinate
-- 100: Landing
+-0: "On the ground",
+-10: "Trạng thái leo ban đầu",
+-20: "Giữ ban đầu sau khi leo lên",
+-30: "Di chuyển đến điểm bắt đầu",
+-40: "Giữ ở điểm bắt đầu",
+-50: "Di chuyển đến điểm bắt đầu điều động",
+-60: "Giữ ở điểm bắt đầu của thao tác",
+-70: "Thao tác (quỹ đạo)",
+-80: "Giữ ở điểm cuối của tọa độ quỹ đạo",
+-90: "Quay về tọa độ nhà",
+-100: "Landing"
 
-Each flight mode is represented by an integer code. These codes are used to indicate the different phases of the flight in the CSV file.
-
-To create a valid CSV file for offboard control, make sure to adhere to the structure described above. Each row should represent a specific time step with the corresponding position, velocity, acceleration, and LED color values.
 """
 
 
@@ -144,7 +141,7 @@ def create_active_csv(shape_name,diameter, direction, maneuver_time, start_x, st
             row = [climb_steps + i, t, x, y, z, vx, vy, vz, 0,0,0, yaw,mode, "nan", "nan", "nan"]
             writer.writerow(row)  
 
-    # Move to start position
+    # Di chuyển đến vị trí bắt đầu
         move_start_distance = math.sqrt(start_x**2 + start_y**2)
         move_start_time = move_start_distance / move_speed
         move_start_steps = int(move_start_time / step_time)
@@ -235,7 +232,7 @@ def create_active_csv(shape_name,diameter, direction, maneuver_time, start_x, st
                 row = [climb_steps + hold_steps + move_steps + move_start_steps + hold_steps  + i, t, x, y, z, vx, vy, vz, 0 ,0,0, yaw,mode, "nan", "nan", "nan"]
                 writer.writerow(row)
 
-            # Calculate the start time after maneuver start
+            # Tính thời gian bắt đầu sau khi bắt đầu thao tác
             start_time = climb_time + hold_time + move_start_time + move_time + hold_time  + hold_time
         else:
             # Calculate the start time after maneuver start
@@ -244,14 +241,14 @@ def create_active_csv(shape_name,diameter, direction, maneuver_time, start_x, st
             move_steps =0
             move_time=0
 
-        # Calculate the total duration of the trajectory after maneuver start
+        # Tính tổng thời gian của quỹ đạo sau khi bắt đầu thao tác
         total_duration = maneuver_time + start_time
         total_steps = int(total_duration / step_time)
         maneuver_steps = int(maneuver_time / step_time)
 
     
 
-        # Fly the shape trajectory
+        # Bay theo quỹ đạo hình dạng
         last_x, last_y, last_z = 0, 0, 0  # Initialize variables to store the last position
 
         for step in range(maneuver_steps):

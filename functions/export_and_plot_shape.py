@@ -21,7 +21,7 @@ def export_and_plot_shape(output_file):
     colors = {0: 'grey', 10: 'orange', 20: 'yellow', 30: 'green', 40: 'blue', 50: 'purple', 60: 'brown', 70: 'red', 80: 'pink', 90: 'cyan', 100: 'black'}
 
     # Define flight mode names
-    mode_names = {0: 'On the ground', 10: 'Initial climbing', 20: 'Initial holding after climb', 30: 'Moving to start point', 40: 'Holding at start point', 50: 'Moving to maneuver start point', 60: 'Holding at maneuver start point', 70: 'Maneuvering (trajectory)', 80: 'Holding at end of trajectory', 90: 'Returning to home', 100: 'Landing'}
+    mode_names = {0: 'On the ground', 10: 'Trạng thái leo ban đầu', 20: 'Giữ ban đầu sau khi leo lên', 30: 'Di chuyển đến điểm bắt đầu', 40: 'Giữ ở điểm bắt đầu', 50: 'Di chuyển đến điểm bắt đầu điều động', 60: 'Giữ ở điểm bắt đầu của thao tác', 70: 'Thao tác (quỹ đạo)', 80: 'Giữ ở điểm cuối của tọa độ quỹ đạo', 90: 'Quay về tọa độ nhà', 100: 'Landing'}
 
     # Plot each segment with the corresponding color
     for mode in np.unique(modes):

@@ -1,0 +1,8 @@
+Chạy chương trình
+1. Mở WSL
+
+Mở các tab khác nhau của WSL
+
+2. Vào PX4-Autopilot(cd PX4-Autopilot) và nhập lệnh "./Tools/simulation/gazebo-classic/sitl_multiple_run.sh -n 5" để chạy đa UAV, "make px4_sitl gazebo " để chạy 1 UAV
+4. Vào QgroundControl (cd QgroundControl)
+3. Vào LS_Drone (cd LS_Drone) và bấm lệnh "code ." để bật chương trình
