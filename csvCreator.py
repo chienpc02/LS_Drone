@@ -41,7 +41,7 @@ from functions.trajectories import *
 from functions.create_active_csv import create_active_csv
 
 # Example usage
-shape_name="helix"
+shape_name="heart_shape"
 diameter = 30.0
 direction = 1
 maneuver_time = 90.0
