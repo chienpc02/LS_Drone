@@ -36,38 +36,38 @@ class DroneConfig:
         self.config['state'] = 0
 
     def get_hw_id(self):
-        # Check the files in the current directory and find the hwID file
+        # Kiểm tra các file trong thư mục hiện tại và tìm file hwID
         hw_id_files = glob.glob("*.hwID")
         if hw_id_files:
             hw_id_file = hw_id_files[0]
-            print(f"Hardware ID file found: {hw_id_file}")
-            # Return the hardware ID without the extension (.hwID)
+            print(f"Đã tìm thấy tệp ID phần cứng: {hw_id_file}")
+            # Trả về ID phần cứng không có phần mở rộng (.hwID)
             hw_id = hw_id_file.split(".")[0]
             print(f"Hardware ID: {hw_id}")
             return hw_id
         else:
-            print("Hardware ID file not found. Please check your files.")
+            print("Không tìm thấy tệp ID phần cứng. Vui lòng kiểm tra các tập tin của bạn.")
             return None
 
     def read_config(self):
-        # If offline_config is True, read the configuration from the local CSV file
+        # If offline_config is True, đọc cấu hình từ tệp CSV cục bộ
         if self.offline_config:
             with open('config.csv', newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     if row['hw_id'] == self.hw_id:
-                        print(f"Configuration for HW_ID {self.hw_id} found in local CSV file.")
+                        print(f"Cấu hình cho HW_ID {self.hw_id} được tìm thấy trong tệp CSV cục bộ.")
                         return row
 
         # Else, download the configuration from the provided URL and save it as a new file
         else:
-            print("Loading configuration from online source...")
+            print("Đang tải cấu hình từ nguồn trực tuyến...")
             try:
-                print(f'Attempting to download file from: {config_url}')
+                print(f'Đang cố tải xuống tệp từ: {config_url}')
                 response = requests.get(config_url)
 
                 if response.status_code != 200:
-                    print(f'Error downloading file: {response.status_code} {response.reason}')
+                    print(f'Lỗi tải tập tin xuống: {response.status_code} {response.reason}')
                     return None
 
                 # Write the content to a new file
@@ -79,13 +79,13 @@ class DroneConfig:
                     reader = csv.DictReader(csvfile)
                     for row in reader:
                         if row['hw_id'] == self.hw_id:
-                            print(f"Configuration for HW_ID {self.hw_id} found in online CSV file.")
+                            print(f"Cấu hình cho HW_ID {self.hw_id} được tìm thấy trong tệp CSV trực tuyến")
                             return row
 
             except Exception as e:
-                print(f"Failed to load online configuration: {e}")
+                print(f"Không tải được cấu hình trực tuyến: {e}")
 
-        print("Configuration not found.")
+        print("Không tìm thấy cấu hình.")
         return None
 
 
@@ -225,9 +225,9 @@ def synchronize_time():
     # Report current time before sync
 
     if (online_sync_time):
-        print(f"Current system time before synchronization: {datetime.datetime.now()}")
-        # Attempt to get the time from a reliable source
-        print("Attempting to synchronize time with a reliable internet source...")
+        print(f"Thời gian hệ thống hiện tại trước khi đồng bộ hóa: {datetime.datetime.now()}")
+        # Cố gắng lấy thời gian từ một nguồn đáng tin cậy
+        print("Đang cố gắng đồng bộ hóa thời gian với nguồn internet đáng tin cậy...")
         response = requests.get("http://worldtimeapi.org/api/ip")
 
         if response.status_code == 200:
@@ -238,28 +238,26 @@ def synchronize_time():
             print(f"Time reported by server: {current_time}")
 
             # Set this time as system time
-            print("Setting system time...")
+            print("Cài đặt thời gian hệ thống...")
             os.system(f"sudo date -s '{current_time}'")
 
             # Report current time after sync
-            print(f"Current system time after synchronization: {datetime.datetime.now()}")
+            print(f"Thời gian hệ thống hiện tại sau khi đồng bộ hóa: {datetime.datetime.now()}")
         else:
-            print("Failed to sync time with an internet source.")
+            print("Không thể đồng bộ hóa thời gian với nguồn internet.")
     else:
-        print(f"Using Current System Time witout Online synchronization: {datetime.datetime.now()}")
+        print(f"Sử dụng Thời gian hệ thống hiện tại mà không đồng bộ hóa trực tuyến: {datetime.datetime.now()}")
 
 
-# Function to schedule the drone mission
+# Hàm lên lịch cho nhiệm vụ bay không người lái
 def schedule_mission():
     # Constantly checks the current time vs trigger time
     # If it's time to trigger, it opens the offboard_from_csv_multiple.py separately
 
     current_time = int(time.time())
-    # print(f"Current system time: {current_time}")
-    # print(f"Target Trigger Time: {drone_config.trigger_time}")
 
     if drone_config.config['state'] == 1 and current_time >= drone_config.trigger_time:
-        print("Trigger time reached. Starting drone mission...")
+        print("Đã đến thời gian kích hoạt. Bắt đầu nhiệm vụ bay không người lái...")
         # Reset the state and trigger time
         drone_config.config['state'] = 2
         drone_config.trigger_time = 0
@@ -293,21 +291,18 @@ def main():
         command_thread = threading.Thread(target=read_commands)
         command_thread.start()
 
-        # Enter a loop where the application will continue running
+        # Nhập một vòng lặp nơi ứng dụng sẽ tiếp tục chạy
         while True:
-            # Get the drone state
-            # drone_state = get_drone_state()
-
-            # Schedule the drone mission if the trigger time has been reached
+            # Lên lịch cho nhiệm vụ bay không người lái nếu đã đạt đến thời gian kích hoạt
             schedule_mission()
 
-            # Sleep for a short interval to prevent the loop from running too fast
+            # Ngủ trong một khoảng thời gian ngắn để tránh vòng lặp chạy quá nhanh
             time.sleep(sleep_interval)
 
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        # Close the threads before the application closes
+        # Đóng chủ đề trước khi đóng ứng dụng
         print("Closing threads...")
         telemetry_thread.join()
         command_thread.join()
