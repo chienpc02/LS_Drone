@@ -1,3 +1,4 @@
+
 """
     
     Vị trí ban đầu của mỗi drone được xác định bởi hàm spawn_model trong script. Tọa độ X và Y được thiết lập như sau:
@@ -69,14 +70,14 @@ async def run_drone(drone_id, trajectory_offset, udp_port, time_offset, altitude
             print(f"Global position estimate ok {drone_id}")
             break
     global_position_telemetry[drone_id] = global_position_telemetry[drone_id]
-    print(f"Vị trí chính của {drone_id} được đặt thành: {global_position_telemetry[drone_id]}")
+    print(f"Home Position of {drone_id} set to: {global_position_telemetry[drone_id]}")
     print(f"-- Arming {drone_id}")
     await drone.action.arm()
-    print(f"-- Đặt điểm đặt ban đầu {drone_id}")
+    print(f"-- Setting initial setpoint {drone_id}")
     await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, 0.0, 0.0))
     
 
-    print(f"-- Bắt đầu từ tàu{drone_id}")
+    print(f"-- Starting offboard {drone_id}")
     try:
         await drone.offboard.start()
     except OffboardError as error:
@@ -108,7 +109,7 @@ async def run_drone(drone_id, trajectory_offset, udp_port, time_offset, altitude
         
             waypoints.append((t, px, py, pz, vx, vy, vz,ax,ay,az,mode_code))
 
-    print(f"-- Quỹ đạo biểu diễn {drone_id}")
+    print(f"-- Performing trajectory {drone_id}")
     total_duration = waypoints[-1][0]  # Thời gian tổng cộng là thời gian của waypoint cuối cùng
     t = 0  # Time variable
     last_mode = 0
@@ -123,7 +124,6 @@ async def run_drone(drone_id, trajectory_offset, udp_port, time_offset, altitude
                 break
 
         if current_waypoint is None:
-            # Reached the end of the trajectory
             break
 
         position = current_waypoint[1:4]  # Trích xuất vị trí (px, py, pz)
@@ -132,7 +132,7 @@ async def run_drone(drone_id, trajectory_offset, udp_port, time_offset, altitude
         mode_code = current_waypoint[-1]
         if last_mode != mode_code:
                 # Print the mode number and its description
-                print(f"Drone id: {drone_id}: ở chế độ: {mode_code}, Mô tả: {mode_descriptions[mode_code]}")
+                print(f"Drone id: {drone_id}: Mode number: {mode_code}, Description: {mode_descriptions[mode_code]}")
                 last_mode = mode_code
                 
         await drone.offboard.set_position_velocity_acceleration_ned(
