@@ -331,13 +331,7 @@
 # - Setting a trigger time so all the drones can start the mission at a specified time in future for synced shows
 # - Allowing to unset the triggered time
 # - Autostarting when OS loads
-# 
-# More features might be added as the project progresses.
-#
-# This script is a part of mavsdk_drone_show repository available at:
-# https://github.com/Alireza787b/mavsdk_drone_show
-#
-# Last updated: June 2023
+
 # -----------------------------------------------------------------------------
 
 # Importing the necessary libraries
