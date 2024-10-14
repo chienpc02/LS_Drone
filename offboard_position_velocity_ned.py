@@ -11,6 +11,7 @@ import signal
 from collections import namedtuple
 import functions.global_to_local
 import glob
+import numpy as np
 
 def read_hw_id():
     hwid_files = glob.glob('*.hwID')
@@ -78,10 +79,36 @@ def read_trajectory_file(filename, trajectory_offset, altitude_offset):
 global_position_telemetry = {}
 dronesConfig = read_config('config.csv')
 
+def attractive_force(current_position, target_position, k_att=1.0):
+    # Lực hấp dẫn hướng về phía mục tiêu
+    direction = np.array(target_position) - np.array(current_position)
+    distance = np.linalg.norm(direction)
+    if distance > 0:
+        return k_att * (direction / distance)
+    return np.zeros(3)
+
+def repulsive_force(current_position, obstacle_position, radius_of_influence, k_rep=100.0):
+    # Lực đẩy ra xa khỏi vật cản
+    direction = np.array(current_position) - np.array(obstacle_position)
+    distance = np.linalg.norm(direction)
+    if distance < radius_of_influence and distance > 0:
+        return k_rep * (1.0 / distance - 1.0 / radius_of_influence) * (direction / distance)
+    return np.zeros(3)
+
 async def get_global_position_telemetry(drone_id, drone):
     async for global_position in drone.telemetry.position():
         global_position_telemetry[drone_id] = global_position
         pass
+
+#Cập nhật vị trí của mỗi drone
+async def update_obstacle_positions(dronesConfig, global_position_telemetry):
+    obstacle_positions = []
+    for drone_id, drone in enumerate(dronesConfig):
+        if drone_id in global_position_telemetry:
+            global_position = global_position_telemetry[drone_id]
+            obstacle_positions.append([global_position.latitude_deg, global_position.longitude_deg, global_position.relative_altitude_m])
+    return obstacle_positions
+
 
 async def perform_trajectory(drone_id, drone, waypoints, home_position, home_position_NED, global_position_telemetry, mode_descriptions):
     print(f"-- Qũy đạo biểu diễn {drone_id}")
@@ -89,6 +116,9 @@ async def perform_trajectory(drone_id, drone, waypoints, home_position, home_pos
     t = 0
     last_mode = 0
     last_waypoint_index = 0
+
+    obstacle_positions = await update_obstacle_positions(dronesConfig, global_position_telemetry)
+    radius_of_influence = 3.0
 
     # Thực hiện quỹ đạo bay của drone
     while t <= total_duration:
@@ -101,6 +131,24 @@ async def perform_trajectory(drone_id, drone, waypoints, home_position, home_pos
                 current_waypoint = waypoints[i]
                 last_waypoint_index = i
                 break
+
+        position = current_waypoint[1:4]
+        velocity = np.array(current_waypoint[4:7])
+
+
+
+        # tính lực APF
+        target_position = position
+        att_force = attractive_force(local_ned_position, target_position)
+
+        rep_force_total = np.zeros(3)
+        for obstacle_position in obstacle_positions:
+            rep_force_total += repulsive_force(local_ned_position, obstacle_position, radius_of_influence)
+
+        total_force = att_force + rep_force_total
+        updated_velocity = velocity + total_force
+
+
 
         #Tính toán vị trí vận tốc, gia tốc
         if (SEPERATE_CSV == True):
@@ -119,7 +167,7 @@ async def perform_trajectory(drone_id, drone, waypoints, home_position, home_pos
         # Điều khiển drone đến vị trí mới
         await drone.offboard.set_position_velocity_acceleration_ned(
             PositionNedYaw(*position, yaw),
-            VelocityNedYaw(*velocity, yaw),
+            VelocityNedYaw(*updated_velocity, yaw),
             AccelerationNed(*acceleration)
         )
 
@@ -229,7 +277,6 @@ async def create_drone_configurations(num_drones, time_offset):
     # relative to drone 0
     home_positions = [(drone.x, drone.y, DEFAULT_Z) for drone in dronesConfig]
     traejctory_offset = [(0, 0, 0) for i in range(num_drones)]
-    # udp_ports = [UDP_PORT_BASE + i for i in range(num_drones)]
     if (SIM_MODE == False):
         udp_ports = []
         udp_ports.append(14540)  # default api connection on same hardware
@@ -317,7 +364,7 @@ async def main():
     mavsdk_servers = start_mavsdk_servers(num_drones, udp_ports)
     await run_all_drones(num_drones, home_positions, traejctory_offset, udp_ports, time_offset, altitude_offsets)
     stop_all_mavsdk_servers(mavsdk_servers)
-    print("All tasks completed. Exiting program.")
+    print("Tất cả nhiệm vụ hoàn thành. Thoát khỏi chương trình.")
 
 
 if __name__ == "__main__":
